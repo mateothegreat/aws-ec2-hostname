@@ -1,0 +1,17 @@
+- name: "Retrieve applicable ec2 instances"
+  ec2_instance_info:
+    profile: "{{ aws.profile }}"
+    region: "{{ aws.region }}"
+    filters:
+      instance-state-name: "running"
+  register: ec2_results
+
+- name: "Add ec2 instances to inventory"
+  add_host:
+    name: "{{ item.tags.Name }}"
+    group: "ec2"
+    ansible_ssh_host: "{{ item.private_ip | default(item.private_ip_address) }}"
+    ansible_ssh_user: "centos"
+    ansible_ssh_private_key_file: "~/.ssh/{{ item.key_name }}.pem"
+  when: item.tags.Name is defined and item.key_name is defined and item.tags['aws:autoscaling:groupName'] is not defined
+  loop: "{{ ec2_results.instances }}"

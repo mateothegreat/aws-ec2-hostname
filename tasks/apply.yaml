@@ -1,0 +1,51 @@
+- name: "Get instance id from metadata api"
+  uri:
+    url: "http://169.254.169.254/latest/meta-data/instance-id"
+    return_content: "yes"
+  register: instance_id
+
+- name: "Get instance availability zone from metadata api"
+  uri:
+    url: "http://169.254.169.254/latest/meta-data/placement/availability-zone"
+    return_content: "yes"
+  register: availability_zone
+
+- name: "Query for ec2 instance info from AWS"
+  ec2_instance_info:
+    profile: "{{ aws.profile }}"
+    region: "{{ availability_zone.content | regex_replace('[a-z]$', '') }}"
+    instance_ids:
+      - "{{ instance_id.content }}"
+  register: instance_info
+  delegate_to: "localhost"
+
+- fail:
+    msg: "No instance info could be retrieved from AWS api."
+  when: (instance_info.instances | length != 1) or (instance_info.instances[0].tags.Name | length == 0)
+
+- name: "Set current hostname"
+  become: true
+  hostname:
+    name: "{{ instance_info.instances[0].tags.Name }}"
+
+- name: "Update /etc/cloud/cloud.cfg to persist hostname"
+  become: true
+  lineinfile:
+    path: "/etc/cloud/cloud.cfg"
+    line: "preserve_hostname: true"
+
+- name: "Update ec2 tags"
+  ec2_tag:
+    profile: "{{ aws.profile }}"
+    region: "{{ availability_zone.content | regex_replace('[a-z]$', '') }}"
+    resource: "{{ instance_id.content }}"
+    tags: "{{ aws.tags }}"
+  delegate_to: "localhost"
+  when: aws.tags is defined
+
+- name: "Reboot ec2 instance"
+  become: true
+  reboot:
+    msg: "Rebooting by ansible aws-ec2-hostname playbook"
+    reboot_timeout: 300
+  when: reboot | bool
