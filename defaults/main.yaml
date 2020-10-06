@@ -1,0 +1,9 @@
+vars:
+  aws_ec2_hostname:
+    tag_based: "true"
+    aws:
+      profile: "{{ aws_profile }}"
+      region: "{{ aws_region }}"
+      tags:
+        ansible_managed_hostname: "yes"
+    reboot: "false"

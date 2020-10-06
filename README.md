@@ -14,12 +14,14 @@ pip install ansible boto3 boto
 
 ```yaml
 vars:
-aws:
-  profile: "{{ aws_profile }}"
-  region: "{{ aws_region }}"
-  tags:
-    ansible_managed_hostname: "yes"
-reboot: "false"
+  aws_ec2_hostname:
+    tag_based: "true"
+    aws:
+      profile: "{{ aws_profile }}"
+      region: "{{ aws_region }}"
+      tags:
+        ansible_managed_hostname: "yes"
+    reboot: "false"
 ```
 
 ## Example Usage
@@ -31,12 +33,14 @@ Add the following to a file like `playbook.yaml`:
   roles:
     - role: "mateothegreat.aws_ec2_hostname"
       vars:
-        aws:
-          profile: "{{ aws_profile }}"
-          region: "{{ aws_region }}"
-          tags:
-            ansible_managed_hostname: "yes"
-        reboot: "false"
+        aws_ec2_hostname:
+          tag_based: "true"
+          aws:
+            profile: "{{ aws_profile }}"
+            region: "{{ aws_region }}"
+            tags:
+              ansible_managed_hostname: "yes"
+          reboot: "false"
 ```
 
 Run with `ansible-playbook -i <your inventory file> playbook.yaml`.

@@ -3,12 +3,14 @@
     url: "http://169.254.169.254/latest/meta-data/instance-id"
     return_content: "yes"
   register: instance_id
+  when: aws_ec2_hostname.tag_based
 
 - name: "Get instance availability zone from metadata api"
   uri:
     url: "http://169.254.169.254/latest/meta-data/placement/availability-zone"
     return_content: "yes"
   register: availability_zone
+  when: aws_ec2_hostname.tag_based
 
 - name: "Query for ec2 instance info from AWS"
   ec2_instance_info:
@@ -18,15 +20,23 @@
       - "{{ instance_id.content }}"
   register: instance_info
   delegate_to: "localhost"
+  when: aws_ec2_hostname.tag_based
 
 - fail:
     msg: "No instance info could be retrieved from AWS api."
-  when: (instance_info.instances | length != 1) or (instance_info.instances[0].tags.Name | length == 0)
+  when: aws_ec2_hostname.tag_based and ((instance_info.instances | length != 1) or (instance_info.instances[0].tags.Name | length == 0))
 
-- name: "Set current hostname"
+- name: "Set current hostname based on tag:Name"
   become: true
   hostname:
     name: "{{ instance_info.instances[0].tags.Name }}"
+  when: aws_ec2_hostname.tag_based
+
+- name: "Set current hostname manually"
+  become: true
+  hostname:
+    name: "{{ aws_ec2_hostname.name }}"
+  when: aws_ec2_hostname.tag_based
 
 - name: "Update /etc/cloud/cloud.cfg to persist hostname"
   become: true
