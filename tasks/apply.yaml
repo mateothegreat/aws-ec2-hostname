@@ -13,6 +13,7 @@
   when: aws_ec2_hostname.tag_based
 
 - name: "Query for ec2 instance info from AWS"
+  become: "false"
   ec2_instance_info:
     profile: "{{ aws_ec2_hostname.aws.profile }}"
     region: "{{ availability_zone.content | regex_replace('[a-z]$', '') }}"
