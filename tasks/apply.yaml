@@ -58,4 +58,4 @@
   reboot:
     msg: "Rebooting by ansible aws-ec2-hostname playbook"
     reboot_timeout: 300
-  when: reboot | bool
+  when: aws_ec2_hostname.reboot | bool
