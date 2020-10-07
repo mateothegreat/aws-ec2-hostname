@@ -14,7 +14,7 @@
 
 - name: "Query for ec2 instance info from AWS"
   ec2_instance_info:
-    profile: "{{ aws.profile }}"
+    profile: "{{ aws_ec2_hostname.aws.profile }}"
     region: "{{ availability_zone.content | regex_replace('[a-z]$', '') }}"
     instance_ids:
       - "{{ instance_id.content }}"
@@ -36,7 +36,7 @@
   become: true
   hostname:
     name: "{{ aws_ec2_hostname.name }}"
-  when: aws_ec2_hostname.tag_based
+  when: not aws_ec2_hostname.tag_based
 
 - name: "Update /etc/cloud/cloud.cfg to persist hostname"
   become: true
@@ -46,10 +46,10 @@
 
 - name: "Update ec2 tags"
   ec2_tag:
-    profile: "{{ aws.profile }}"
+    profile: "{{ aws_ec2_hostname.aws.profile }}"
     region: "{{ availability_zone.content | regex_replace('[a-z]$', '') }}"
     resource: "{{ instance_id.content }}"
-    tags: "{{ aws.tags }}"
+    tags: "{{ aws_ec2_hostname.aws.tags }}"
   delegate_to: "localhost"
   when: aws.tags is defined
 
