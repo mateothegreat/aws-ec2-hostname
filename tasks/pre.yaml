@@ -1,4 +1,4 @@
-- name: "Verify the profile \"{{ aws.profile }}\" exists in ~/.aws/credentials"
+- name: "Verify the profile exists in ~/.aws/credentials"
   lineinfile:
     dest: "~/.aws/credentials"
     line: "[{{ aws_ec2_hostname.aws.profile }}]"
