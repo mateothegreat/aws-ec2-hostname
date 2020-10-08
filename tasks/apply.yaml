@@ -21,23 +21,23 @@
       - "{{ instance_id.content }}"
   register: instance_info
   delegate_to: "localhost"
-  when: aws_ec2_hostname.tag_based
+  when: aws_ec2_hostname.tag_based | bool
 
 - fail:
     msg: "No instance info could be retrieved from AWS api."
-  when: aws_ec2_hostname.tag_based and ((instance_info.instances | length != 1) or (instance_info.instances[0].tags.Name | length == 0))
+  when: aws_ec2_hostname.tag_based | bool and ((instance_info.instances | length != 1) or (instance_info.instances[0].tags.Name | length == 0))
 
 - name: "Set current hostname based on tag:Name"
   become: true
   hostname:
     name: "{{ instance_info.instances[0].tags.Name }}"
-  when: aws_ec2_hostname.tag_based
+  when: aws_ec2_hostname.tag_based | bool
 
 - name: "Set current hostname manually"
   become: true
   hostname:
     name: "{{ aws_ec2_hostname.name }}"
-  when: not aws_ec2_hostname.tag_based
+  when: not aws_ec2_hostname.tag_based | bool
 
 - name: "Update /etc/cloud/cloud.cfg to persist hostname"
   become: true
